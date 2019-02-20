@@ -44,37 +44,6 @@ export default class CallHandler {
         this.wss.on('connection', this.onConnection);
     }
 
-    updatePeers = () => {
-        var peers = [];
-
-        this.clients.forEach(function (client) {
-            var peer = {};
-            if (client.hasOwnProperty('id')) {
-                peer.id = client.id;
-            }
-            if (client.hasOwnProperty('name')) {
-                peer.name = client.name;
-            }
-            if (client.hasOwnProperty('user_agent')) {
-                peer.user_agent = client.user_agent;
-            }
-            if (client.hasOwnProperty('session_id')) {
-                peer.session_id = client.session_id;
-            }
-            peers.push(peer);
-        });
-
-        var msg = {
-            type: "peers",
-            data: peers,
-        };
-
-        let _send = this._send;
-        this.clients.forEach(function (client) {
-            _send(client, JSON.stringify(msg));
-        });
-    }
-
     onClose = (client_self, data) => {
         console.log('close');
         var session_id = client_self.session_id;
@@ -98,8 +67,6 @@ export default class CallHandler {
             if (client != client_self)
             _send(client, JSON.stringify(msg));
         });
-
-        this.updatePeers();
     }
 
     onConnection = (client_self, socket) => {
@@ -128,7 +95,6 @@ export default class CallHandler {
                         client_self.id = "" + message.id;
                         client_self.name = message.name;
                         client_self.user_agent = message.user_agent;
-                        this.updatePeers();
                     }
                     break;
                 case 'bye':
