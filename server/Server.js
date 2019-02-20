@@ -79,7 +79,7 @@ export default class CallHandler {
         console.log('close');
         var session_id = client_self.session_id;
         //remove old session_id
-        if (session_id !== undefined) {
+        if (session_id) {
             for (let i = 0; i < this.sessions.length; i++) {
                 let item = this.sessions[i];
                 if (item.id == session_id) {
@@ -95,8 +95,10 @@ export default class CallHandler {
 
         let _send = this._send;
         this.clients.forEach(function (client) {
-            if (client != client_self)
-            _send(client, JSON.stringify(msg));
+            if (client != client_self) {
+                _send(client, JSON.stringify(msg));
+                client.session_id = null;
+            };
         });
 
         this.updatePeers();
@@ -164,11 +166,13 @@ export default class CallHandler {
                                         },
                                     };
                                     _send(client, JSON.stringify(msg));
+                                    client.session_id = null;
                                 } catch (e) {
                                     console.log("onUserJoin:" + e.message);
                                 }
                             }
                         });
+                        client_self.session_id = null;
                     }
                     break;
                 case "offer":
@@ -182,21 +186,22 @@ export default class CallHandler {
 
                         if (peer != null) {
 
-                            msg = {
-                                type: "offer",
-                                data: {
-                                    to: peer.id,
-                                    from: client_self.id,
-                                    media: message.media,
-                                    session_id: message.session_id,
-                                    description: message.description,
+                            if (! peer.session_id) { // do not pass on offer if peer is in a session
+                                msg = {
+                                    type: "offer",
+                                    data: {
+                                        to: peer.id,
+                                        from: client_self.id,
+                                        media: message.media,
+                                        session_id: message.session_id,
+                                        description: message.description,
+                                    }
                                 }
+                                _send(peer, JSON.stringify(msg));
+
+                                peer.session_id = message.session_id;
                             }
-                            _send(peer, JSON.stringify(msg));
-
-                            peer.session_id = message.session_id;
                             client_self.session_id = message.session_id;
-
                             let session = {
                                 id: message.session_id,
                                 from: client_self.id,
