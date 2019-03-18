@@ -87,17 +87,18 @@ export default class CallHandler {
                     break;
                 }
             }
-        }
-        var msg = {
-            type: "leave",
-            data: client_self.id,
-        };
 
-        let _send = this._send;
-        this.clients.forEach(function (client) {
-            if (client != client_self)
-            _send(client, JSON.stringify(msg));
-        });
+            var msg = {
+                type: "leave",
+                data: client_self.id,
+            };
+
+            let _send = this._send;
+            this.clients.forEach(function (client) {
+                if (client != client_self && client.session_id == session_id)
+                _send(client, JSON.stringify(msg));
+            });
+        }
 
         this.updatePeers();
     }
